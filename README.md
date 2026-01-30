@@ -289,31 +289,41 @@ cd /path/to/agentmail && uv run agentmail.py \
 
 ### Optional: Create a Skill
 
-For a `/email` slash command, create `~/.claude/skills/email.md`:
+For a `/email` slash command, create `~/.claude/skills/email/SKILL.md`:
+
+```bash
+mkdir -p ~/.claude/skills/email
+```
 
 ```markdown
 ---
-description: Send email via agentmail
-arguments:
-  - name: to
-    description: Recipient email address
-  - name: subject
-    description: Email subject line
-  - name: body
-    description: Email body
+name: email
+description: Send email via agentmail. Use when the user wants to send an email.
+argument-hint: "[to] [subject] [body]"
+user-invocable: true
 ---
 
-Send an email using agentmail:
+Send an email using agentmail. The recipient must be in the allowlist.
+
+Arguments: $ARGUMENTS
+- First argument ($0): recipient email address
+- Second argument ($1): email subject
+- Third argument ($2): email body
 
 \`\`\`bash
 cd /path/to/agentmail && uv run agentmail.py \
-  --to "{{to}}" \
-  --subject "{{subject}}" \
-  --body "{{body}}"
+  --to "$0" \
+  --subject "$1" \
+  --body "$2"
 \`\`\`
+
+Options you can add:
+- \`--dry-run\` to test without sending
+- \`--html\` for HTML content
+- \`--attach file1 file2\` for attachments
 ```
 
-Then use: `/email to:user@example.com subject:"Hello" body:"Message"`
+Then use: `/email user@example.com "Subject line" "Message body"`
 
 ## License
 
