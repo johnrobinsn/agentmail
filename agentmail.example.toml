@@ -19,6 +19,14 @@ addresses = [
     # "alerts@yourcompany.slack.com",
 ]
 
+[aliases]
+# Friendly names for email addresses
+# Use --to "me" instead of --to "you@example.com"
+# Alias names are case-insensitive
+# me = "you@example.com"
+# wife = "spouse@example.com"
+# team = "team@company.org"
+
 [audit]
 # Path to the audit log file (JSON Lines format)
 # Each email attempt is logged with timestamp, recipient, subject, and status

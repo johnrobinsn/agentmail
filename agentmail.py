@@ -36,7 +36,7 @@ def load_config(path: Path) -> Dict[str, Any]:
     Raises ValueError for invalid TOML.
     """
     if not path.exists():
-        return {"allowlist": {"addresses": []}, "audit": {}, "defaults": {}}
+        return {"allowlist": {"addresses": []}, "aliases": {}, "audit": {}, "defaults": {}}
 
     try:
         with open(path, "rb") as f:
@@ -47,10 +47,24 @@ def load_config(path: Path) -> Dict[str, Any]:
     # Ensure required sections exist with defaults
     config.setdefault("allowlist", {})
     config["allowlist"].setdefault("addresses", [])
+    config.setdefault("aliases", {})
     config.setdefault("audit", {})
     config.setdefault("defaults", {})
 
     return config
+
+
+def resolve_alias(recipient: str, aliases: Dict[str, str]) -> str:
+    """Resolve recipient alias to email address.
+
+    Returns the resolved email if alias exists, otherwise returns original.
+    Matching is case-insensitive.
+    """
+    recipient_lower = recipient.lower()
+    for alias, email in aliases.items():
+        if alias.lower() == recipient_lower:
+            return email
+    return recipient
 
 
 def is_allowed(recipient: str, allowlist: List[str]) -> bool:
@@ -132,7 +146,7 @@ def main() -> int:
         description="Send emails via Gmail with allowlist safety",
         prog="agentmail",
     )
-    parser.add_argument("--to", required=True, help="Recipient email address")
+    parser.add_argument("--to", required=True, help="Recipient email address or alias")
     parser.add_argument("--subject", required=True, help="Email subject line")
     parser.add_argument("--body", help="Email body text")
     parser.add_argument("--html", action="store_true", help="Treat body as HTML")
@@ -198,22 +212,25 @@ def main() -> int:
             print(f"Error: Inline image not found: {path}", file=sys.stderr)
             return 1
 
+    # Resolve alias to email address
+    recipient = resolve_alias(args.to, config["aliases"])
+
     # Build audit entry
     attachment_names = [Path(a).name for a in (args.attach or [])]
     audit_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "to": args.to,
+        "to": recipient,
         "subject": args.subject,
         "attachments": attachment_names,
     }
 
     # Check allowlist
     allowlist = config["allowlist"]["addresses"]
-    if not is_allowed(args.to, allowlist):
+    if not is_allowed(recipient, allowlist):
         audit_entry["status"] = "blocked"
         audit_entry["error"] = "Recipient not in allowlist"
         audit_log(log_file, audit_entry)
-        print(f"Error: Recipient not in allowlist: {args.to}", file=sys.stderr)
+        print(f"Error: Recipient not in allowlist: {recipient}", file=sys.stderr)
         return 1
 
     # Get credentials from environment
@@ -237,7 +254,7 @@ def main() -> int:
             yag = yagmail.SMTP(gmail_user, gmail_password)
             send_email(
                 yag=yag,
-                to=args.to,
+                to=recipient,
                 subject=args.subject,
                 body=body,
                 html=args.html,

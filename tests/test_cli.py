@@ -513,3 +513,133 @@ class TestCLIRequiredArgs:
 
         assert result.returncode != 0
         assert "--subject" in result.stderr
+
+
+class TestCLIAliases:
+    """Tests for email alias resolution via CLI."""
+
+    def test_alias_resolves_to_allowed_email(self, tmp_path: Path) -> None:
+        """Alias resolves to allowed email and succeeds."""
+        config = tmp_path / "agentmail.toml"
+        config.write_text(
+            """
+[allowlist]
+addresses = ["john@example.com"]
+
+[aliases]
+me = "john@example.com"
+"""
+        )
+
+        result = run_agentmail(
+            [
+                "--to",
+                "me",
+                "--subject",
+                "Test",
+                "--body",
+                "Test body",
+                "--config",
+                str(config),
+                "--dry-run",
+            ]
+        )
+
+        assert result.returncode == 0
+
+    def test_alias_case_insensitive(self, tmp_path: Path) -> None:
+        """Alias matching is case-insensitive."""
+        config = tmp_path / "agentmail.toml"
+        config.write_text(
+            """
+[allowlist]
+addresses = ["john@example.com"]
+
+[aliases]
+Me = "john@example.com"
+"""
+        )
+
+        result = run_agentmail(
+            [
+                "--to",
+                "ME",
+                "--subject",
+                "Test",
+                "--body",
+                "Test body",
+                "--config",
+                str(config),
+                "--dry-run",
+            ]
+        )
+
+        assert result.returncode == 0
+
+    def test_alias_to_non_allowed_email_blocked(self, tmp_path: Path) -> None:
+        """Alias resolving to non-allowed email is blocked."""
+        config = tmp_path / "agentmail.toml"
+        config.write_text(
+            """
+[allowlist]
+addresses = ["allowed@example.com"]
+
+[aliases]
+me = "notallowed@example.com"
+"""
+        )
+
+        result = run_agentmail(
+            [
+                "--to",
+                "me",
+                "--subject",
+                "Test",
+                "--body",
+                "Test body",
+                "--config",
+                str(config),
+                "--dry-run",
+            ]
+        )
+
+        assert result.returncode == 1
+        assert "not in allowlist" in result.stderr
+
+    def test_alias_logged_as_resolved_email(self, tmp_path: Path) -> None:
+        """Audit log shows resolved email, not alias."""
+        log_file = tmp_path / "agentmail.log"
+        config = tmp_path / "agentmail.toml"
+        config.write_text(
+            f"""
+[allowlist]
+addresses = ["john@example.com"]
+
+[aliases]
+me = "john@example.com"
+
+[audit]
+log_file = "{log_file}"
+"""
+        )
+
+        result = run_agentmail(
+            [
+                "--to",
+                "me",
+                "--subject",
+                "Test Subject",
+                "--body",
+                "Test body",
+                "--config",
+                str(config),
+                "--dry-run",
+            ]
+        )
+
+        assert result.returncode == 0
+        assert log_file.exists()
+
+        entries = [json.loads(line) for line in log_file.read_text().strip().split("\n")]
+        assert len(entries) == 1
+        assert entries[0]["to"] == "john@example.com"  # Resolved email, not "me"

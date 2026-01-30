@@ -93,6 +93,12 @@ addresses = [
     "team@company.org",
 ]
 
+[aliases]
+# Friendly names for email addresses (case-insensitive)
+me = "you@example.com"
+wife = "spouse@example.com"
+team = "team@company.org"
+
 [audit]
 # JSON Lines format audit log (optional)
 log_file = "./agentmail.log"
@@ -113,6 +119,14 @@ log_file = "./agentmail.log"
 
 ```bash
 uv run agentmail.py --to recipient@example.com --subject "Hello" --body "Message body"
+```
+
+### Using Aliases
+
+```bash
+# Instead of typing full email addresses
+uv run agentmail.py --to me --subject "Reminder" --body "Don't forget!"
+uv run agentmail.py --to wife --subject "Running late" --body "Be home soon"
 ```
 
 ### With Attachments
