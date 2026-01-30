@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Logs (audit logs contain runtime data)
+agentmail.log
+
+# Environment
+.env

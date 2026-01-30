@@ -1,0 +1,18 @@
+# AgentMail Configuration
+# Copy this file to your working directory and customize
+
+[allowlist]
+# Only these email addresses can receive emails
+# Exact match only, no wildcards
+addresses = [
+    "allowed@example.com",
+    "team@company.org",
+]
+
+[audit]
+# JSON Lines format audit log
+log_file = "./agentmail.log"
+
+[defaults]
+# Optional default values (reserved for future use)
+# from_name = "AgentMail"
