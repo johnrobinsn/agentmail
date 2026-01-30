@@ -247,6 +247,74 @@ uv run --with pytest --with pytest-cov --with yagmail --with tomli \
     pytest tests/ --cov=agentmail --cov-report=term-missing
 ```
 
+## Claude Code Integration
+
+To enable Claude Code to send emails automatically when you ask it to, add instructions to your `CLAUDE.md` file.
+
+### Global Setup (All Projects)
+
+Add to `~/.claude/CLAUDE.md`:
+
+```markdown
+## Email
+
+When asked to send an email, use agentmail:
+
+\`\`\`bash
+cd /path/to/agentmail && uv run agentmail.py \
+  --to "recipient@example.com" \
+  --subject "Subject" \
+  --body "Message"
+\`\`\`
+
+Only addresses in `/path/to/agentmail/agentmail.toml` allowlist can receive emails.
+```
+
+### Project-Specific Setup
+
+Add to `CLAUDE.md` in a specific project:
+
+```markdown
+## Notifications
+
+Send build/test notifications via email:
+
+\`\`\`bash
+cd /path/to/agentmail && uv run agentmail.py \
+  --to "team@example.com" \
+  --subject "Build Status" \
+  --body "Message"
+\`\`\`
+```
+
+### Optional: Create a Skill
+
+For a `/email` slash command, create `~/.claude/skills/email.md`:
+
+```markdown
+---
+description: Send email via agentmail
+arguments:
+  - name: to
+    description: Recipient email address
+  - name: subject
+    description: Email subject line
+  - name: body
+    description: Email body
+---
+
+Send an email using agentmail:
+
+\`\`\`bash
+cd /path/to/agentmail && uv run agentmail.py \
+  --to "{{to}}" \
+  --subject "{{subject}}" \
+  --body "{{body}}"
+\`\`\`
+```
+
+Then use: `/email to:user@example.com subject:"Hello" body:"Message"`
+
 ## License
 
 MIT
