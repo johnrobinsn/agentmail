@@ -439,8 +439,8 @@ addresses = ["test@example.com"]
 """
         )
 
-        env = {k: v for k, v in os.environ.items() if k != "GMAIL_USER"}
-        env["GMAIL_APP_PASSWORD"] = "test-password"
+        # Filter out both credentials and run from tmp_path to avoid loading .env
+        env = {k: v for k, v in os.environ.items() if k not in ("GMAIL_USER", "GMAIL_APP_PASSWORD")}
 
         result = run_agentmail(
             [
@@ -454,6 +454,7 @@ addresses = ["test@example.com"]
                 str(config),
             ],
             env=env,
+            cwd=tmp_path,  # Run from tmp_path so dotenv doesn't find .env
         )
 
         assert result.returncode == 1
@@ -469,7 +470,8 @@ addresses = ["test@example.com"]
 """
         )
 
-        env = {k: v for k, v in os.environ.items() if k != "GMAIL_APP_PASSWORD"}
+        # Filter out password and run from tmp_path to avoid loading .env
+        env = {k: v for k, v in os.environ.items() if k not in ("GMAIL_USER", "GMAIL_APP_PASSWORD")}
         env["GMAIL_USER"] = "test@gmail.com"
 
         result = run_agentmail(
@@ -484,6 +486,7 @@ addresses = ["test@example.com"]
                 str(config),
             ],
             env=env,
+            cwd=tmp_path,  # Run from tmp_path so dotenv doesn't find .env
         )
 
         assert result.returncode == 1

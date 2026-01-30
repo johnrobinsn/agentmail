@@ -1,0 +1,30 @@
+# AgentMail Configuration Example
+#
+# Copy this file to agentmail.toml in your working directory:
+#   cp agentmail.example.toml agentmail.toml
+#
+# The allowlist is a critical safety feature - only addresses listed here
+# can receive emails. This prevents agents from accidentally (or maliciously)
+# sending to unintended recipients.
+
+[allowlist]
+# Email addresses that are allowed to receive emails
+# - Exact match only (no wildcards or patterns)
+# - Case-insensitive matching
+# - An empty list blocks ALL emails
+addresses = [
+    # Add your allowed recipients here:
+    # "you@example.com",
+    # "team@company.org",
+    # "alerts@yourcompany.slack.com",
+]
+
+[audit]
+# Path to the audit log file (JSON Lines format)
+# Each email attempt is logged with timestamp, recipient, subject, and status
+# Omit this section to disable audit logging
+log_file = "./agentmail.log"
+
+# [defaults]
+# Reserved for future use
+# from_name = "AgentMail"

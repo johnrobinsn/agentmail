@@ -3,6 +3,7 @@
 # requires-python = ">=3.8"
 # dependencies = [
 #     "yagmail",
+#     "python-dotenv",
 #     "tomli; python_version < '3.11'",
 # ]
 # ///
@@ -25,6 +26,7 @@ except ImportError:
     import tomli as tomllib
 
 import yagmail
+from dotenv import load_dotenv
 
 
 def load_config(path: Path) -> Dict[str, Any]:
@@ -123,6 +125,9 @@ def parse_inline_arg(inline_args: Optional[List[str]]) -> Dict[str, str]:
 
 def main() -> int:
     """Main entry point."""
+    # Load .env file from current directory only (don't search parents)
+    load_dotenv(Path.cwd() / ".env")
+
     parser = argparse.ArgumentParser(
         description="Send emails via Gmail with allowlist safety",
         prog="agentmail",
